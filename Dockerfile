@@ -1,3 +1,13 @@
+FROM python:3.11 as requirements-stage
+
+# Install poetry
+RUN pip install "poetry>=1.2.2"
+
+# Use poetry to generate requirements.txt
+WORKDIR /tmp
+COPY ./pyproject.toml ./poetry.lock* ./
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --with selfhosted
+
 # Use an NVIDIA CUDA base image with Python 3
 FROM nvidia/cuda:11.6.2-base-ubuntu20.04 
 
@@ -5,7 +15,7 @@ FROM nvidia/cuda:11.6.2-base-ubuntu20.04
 WORKDIR /usr/src/app
 
 # Copy the requirements.txt file first to leverage Docker cache
-COPY requirements.txt ./
+COPY --from=requirements-stage /tmp/requirements.txt ./
 
 # Avoid interactive prompts from apt-get
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,7 +28,7 @@ RUN apt-get update && apt-get install -y python3-pip libsndfile1 ffmpeg && \
 ENV DEBIAN_FRONTEND=newt
 
 # Copy the rest of your application's code
-COPY . .
+COPY ./src ./
 
 # Make port 8765 available to the world outside this container
 EXPOSE 8765
