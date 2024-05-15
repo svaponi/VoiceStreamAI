@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "voicestreamai"
+version = "0.1.0"
+description = ""
+authors = ["svaponi <10941963+svaponi@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+websockets = "^12.0"
+pyannote-audio = "^3.2.0"
+faster-whisper = "^1.0.2"
+transformers = "^4.40.2"
+sentence-transformers = "^2.7.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+pydub = "^0.25.1"
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
