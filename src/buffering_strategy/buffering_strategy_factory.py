@@ -1,5 +1,6 @@
 from .buffering_strategies import SilenceAtEndOfChunk
 
+
 class BufferingStrategyFactory:
     """
     A factory class for creating instances of different buffering strategies.
@@ -22,7 +23,7 @@ class BufferingStrategyFactory:
         recognized, it raises a ValueError.
 
         Args:
-            type (str): The type of buffering strategy to create. Currently supports 'silence_at_end_of_chunk'.
+            type (str): The type of buffering strategy to create. Currently, supports 'silence_at_end_of_chunk'.
             client (Client): The client instance to be associated with the buffering strategy.
             **kwargs: Additional keyword arguments specific to the buffering strategy being created.
 

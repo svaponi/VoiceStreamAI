@@ -1,5 +1,6 @@
-from .whisper_asr import WhisperASR
 from .faster_whisper_asr import FasterWhisperASR
+from .whisper_asr import WhisperASR
+
 
 class ASRFactory:
     @staticmethod

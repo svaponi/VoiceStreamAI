@@ -1,16 +1,17 @@
-# tests/server/test_server.py
-
-import unittest
-import os
-import json
 import asyncio
+import json
+import os
+import unittest
+
+import dotenv
 import websockets
 from pydub import AudioSegment
 from sentence_transformers import SentenceTransformer, util
 
+from src.asr.asr_factory import ASRFactory
 from src.server import Server
 from src.vad.vad_factory import VADFactory
-from src.asr.asr_factory import ASRFactory
+
 
 class TestServer(unittest.TestCase):
     """
@@ -27,8 +28,10 @@ class TestServer(unittest.TestCase):
         test_server_response: Tests the server's response accuracy by comparing received and expected transcriptions.
         load_annotations: Loads transcription annotations for comparison with server responses.
     """
+
     @classmethod
     def setUpClass(cls):
+        dotenv.load_dotenv()
         # Use an environment variable to get the ASR model type
         cls.asr_type = os.getenv('ASR_TYPE', 'faster_whisper')
         cls.vad_type = os.getenv('VAD_TYPE', 'pyannote')
@@ -57,9 +60,10 @@ class TestServer(unittest.TestCase):
         try:
             while True:
                 transcription_str = await websocket.recv()
-                transcription = json.loads(transcription_str) 
+                transcription = json.loads(transcription_str)
                 self.received_transcriptions.append(transcription['text'])
-                print(f"Received transcription: {transcription['text']}, processing time: {transcription['processing_time']}")
+                print(
+                    f"Received transcription: {transcription['text']}, processing time: {transcription['processing_time']}")
         except websockets.exceptions.ConnectionClosed:
             pass  # Expected when server closes the connection
 
@@ -80,12 +84,12 @@ class TestServer(unittest.TestCase):
             # Stream the entire audio file in chunks
             with open(audio_file, 'rb') as file:
                 audio = AudioSegment.from_file(file, format="wav")
-            
+
             for i in range(0, len(audio), 250):  # 4000 samples = 250 ms at 16000 Hz
-                chunk = audio[i:i+250]
+                chunk = audio[i:i + 250]
                 await websocket.send(chunk.raw_data)
                 await asyncio.sleep(0.25)  # Wait for the chunk duration
-                
+
             # Stream 10 seconds of silence
             silence = AudioSegment.silent(duration=10000)
             await websocket.send(silence.raw_data)
@@ -101,6 +105,13 @@ class TestServer(unittest.TestCase):
         Compares the received transcriptions from the server with expected transcriptions from annotations.
         Validates the similarity of these transcriptions using a sentence transformer model.
         """
+        # Start event loop if necessary
+        try:
+            asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         # Start the server
         start_server = self.server.start()
         asyncio.get_event_loop().run_until_complete(start_server)
@@ -139,6 +150,7 @@ class TestServer(unittest.TestCase):
         """
         with open(self.annotations_path, 'r') as file:
             return json.load(file)
+
 
 if __name__ == '__main__':
     unittest.main()
