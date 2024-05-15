@@ -6,29 +6,44 @@ RUN pip install "poetry>=1.2.2"
 # Use poetry to generate requirements.txt
 WORKDIR /tmp
 COPY ./pyproject.toml ./poetry.lock* ./
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --with selfhosted
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-# Use an NVIDIA CUDA base image with Python 3
-FROM nvidia/cuda:11.6.2-base-ubuntu20.04 
+FROM python:3.11
 
-# Set the working directory in the container
-WORKDIR /usr/src/app
+# define non-root user
+ARG USER=app
+ARG USERID=1001
+ARG GROUP=app
+ARG GROUPID=1001
+RUN addgroup --gid $GROUPID $GROUP
+RUN adduser --uid $USERID --ingroup $GROUP $USER --disabled-password
 
-# Copy the requirements.txt file first to leverage Docker cache
-COPY --from=requirements-stage /tmp/requirements.txt ./
+## Define workdir
+ARG WORKDIR=/workdir
 
-# Avoid interactive prompts from apt-get
-ENV DEBIAN_FRONTEND=noninteractive
+# Create workdir
+RUN mkdir -p $WORKDIR
 
-# Install any needed packages specified in requirements.txt
-RUN apt-get update && apt-get install -y python3-pip libsndfile1 ffmpeg && \
-    pip3 install --no-cache-dir -r requirements.txt
+# Move to workdir
+WORKDIR $WORKDIR
 
-# Reset the frontend (not necessary in newer Docker versions)
-ENV DEBIAN_FRONTEND=newt
+# Allow statements and log messages to immediately appear in the Knative logs
+ENV PYTHONUNBUFFERED True
 
-# Copy the rest of your application's code
-COPY ./src ./
+# install OS deps
+RUN apt-get update -y \
+    && apt-get install -y libsndfile1 ffmpeg
+
+# Install deps
+COPY --from=requirements-stage /tmp/requirements.txt requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy local code to the container image
+COPY src src
+
+# Switch to non-root user
+USER $USER
 
 # Make port 8765 available to the world outside this container
 EXPOSE 8765
@@ -41,4 +56,3 @@ ENTRYPOINT ["python3", "-m", "src.main"]
 
 # Provide a default command (can be overridden at runtime)
 CMD ["--host", "0.0.0.0", "--port", "8765"]
-
