@@ -1,4 +1,7 @@
-class BufferingStrategyInterface:
+import abc
+
+
+class BufferingStrategyInterface(abc.ABC):
     """
     An interface class for buffering strategies in audio processing systems.
 
@@ -13,6 +16,7 @@ class BufferingStrategyInterface:
         process_audio: Process audio data. This method should be implemented by subclasses.
     """
 
+    @abc.abstractmethod
     def process_audio(self, websocket, vad_pipeline, asr_pipeline):
         """
         Process audio data using the given WebSocket connection, VAD pipeline, and ASR pipeline.

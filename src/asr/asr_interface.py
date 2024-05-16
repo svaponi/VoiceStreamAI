@@ -1,4 +1,12 @@
-class ASRInterface:
+import abc
+
+
+class ASRInterface(abc.ABC):
+    """
+    Interface for automatic speech recognition (ASR) systems.
+    """
+
+    @abc.abstractmethod
     async def transcribe(self, client):
         """
         Transcribe the given audio data.

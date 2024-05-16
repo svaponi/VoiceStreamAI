@@ -1,8 +1,12 @@
-class VADInterface:
+import abc
+
+
+class VADInterface(abc.ABC):
     """
     Interface for voice activity detection (VAD) systems.
     """
 
+    @abc.abstractmethod
     async def detect_activity(self, client):
         """
         Detects voice activity in the given audio data.
