@@ -1,4 +1,4 @@
-FROM python:3.11 as requirements-stage
+FROM python:3.9 as requirements-stage
 
 # Install poetry
 RUN pip install "poetry>=1.2.2"
@@ -8,7 +8,7 @@ WORKDIR /tmp
 COPY ./pyproject.toml ./poetry.lock* ./
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-FROM python:3.11
+FROM python:3.9
 
 # define non-root user
 ARG USER=app
