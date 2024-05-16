@@ -13,14 +13,9 @@ class WhisperASR(ASRInterface):
             model = os.getenv("OPENAI_WHISPER_MODEL", "openai/whisper-tiny.en")
         self.asr_pipeline = pipeline("automatic-speech-recognition", model=model)
 
-    async def transcribe(self, client):
-        file_like = await convert_audio_to_wav(
-            client.scratch_buffer
-        )
-
+    async def _transcribe(self, file_like, language=None):
         file_like = np.frombuffer(file_like.read(), dtype=np.int8)
 
-        language = client.config.get("language")
         if language is not None:
             result = self.asr_pipeline(
                 file_like, generate_kwargs={"language": language}

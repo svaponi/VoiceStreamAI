@@ -3,7 +3,6 @@ import os
 import torch
 from faster_whisper import WhisperModel
 
-from src.audio_utils import convert_audio_to_wav
 from .asr_interface import ASRInterface
 
 language_codes = {
@@ -122,14 +121,9 @@ class FasterWhisperASR(ASRInterface):
             compute_type = "float16"
         self.asr_pipeline = WhisperModel(model, device=device, compute_type=compute_type)
 
-    async def transcribe(self, client):
-        file_like = await convert_audio_to_wav(client.scratch_buffer)
+    async def _transcribe(self, file_like, language=None):
+        language = language_codes.get(language.lower()) if language else None
 
-        language = (
-            None
-            if client.config["language"] is None
-            else language_codes.get(client.config["language"].lower())
-        )
         segments, info = self.asr_pipeline.transcribe(
             file_like, word_timestamps=True, language=language
         )
