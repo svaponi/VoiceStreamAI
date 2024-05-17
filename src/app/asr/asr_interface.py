@@ -1,7 +1,7 @@
 import abc
 import logging
 
-from src.audio_utils import convert_audio_to_wav
+from app.audio_utils import convert_audio_to_wav
 
 logger = logging.getLogger(__name__)
 

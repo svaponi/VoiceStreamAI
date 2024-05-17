@@ -3,7 +3,7 @@ import os
 from pyannote.audio import Model
 from pyannote.audio.pipelines import VoiceActivityDetection
 
-from src.audio_utils import convert_audio_to_wav
+from app.audio_utils import convert_audio_to_wav
 from .vad_interface import VADInterface
 
 

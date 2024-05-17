@@ -43,16 +43,13 @@ sudo systemctl restart docker
 You can build the image with:
 
 ```bash
-sudo docker build -t voicestreamai .
+docker build -t voicestreamai .
 ```
 
 After getting your VAD token (see next sections) run:
 
 ```bash
-
-sudo docker volume create huggingface_models
-
-sudo docker run --gpus all -p 8765:8765 -v huggingface_models:/root/.cache/huggingface  -e PYANNOTE_AUTH_TOKEN='VAD_TOKEN_HERE' voicestreamai
+docker run -p 8765:8765 -v "$HOME/.cache:/home/app/.cache" --env-file .env voicestreamai
 ```
 
 The "volume" stuff will allow you not to re-download the huggingface models each time you re-run the container. If you don't need this, just use:

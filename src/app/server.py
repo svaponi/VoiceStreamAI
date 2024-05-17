@@ -1,13 +1,19 @@
 import json
 import logging
+import os
 import ssl
 import uuid
 
 import websockets
 
-from src.client import Client
+from app.asr.asr_factory import ASRFactory
+from app.asr.asr_interface import ASRInterface
+from app.client import Client
+from app.vad.vad_factory import VADFactory
+from app.vad.vad_interface import VADInterface
 
 logger = logging.getLogger(__name__)
+
 
 class Server:
     """
@@ -29,23 +35,23 @@ class Server:
 
     def __init__(
         self,
-        vad_pipeline,
-        asr_pipeline,
-        host="localhost",
-        port=8765,
-        sampling_rate=16000,
-        samples_width=2,
+        host=None,
+        port=None,
+        sampling_rate=None,
+        samples_width=None,
         certfile=None,
         keyfile=None,
+        vad_pipeline: VADInterface = None,
+        asr_pipeline: ASRInterface = None,
     ):
-        self.vad_pipeline = vad_pipeline
-        self.asr_pipeline = asr_pipeline
-        self.host = host
-        self.port = port
-        self.sampling_rate = sampling_rate
-        self.samples_width = samples_width
-        self.certfile = certfile
-        self.keyfile = keyfile
+        self.vad_pipeline = vad_pipeline or VADFactory.create_vad_pipeline()
+        self.asr_pipeline = asr_pipeline or ASRFactory.create_asr_pipeline()
+        self.host = host or os.getenv("HOST", "localhost")
+        self.port = port or int(os.getenv("PORT", 8765))
+        self.sampling_rate = sampling_rate or 16000
+        self.samples_width = samples_width or 2
+        self.certfile = certfile or os.getenv("CERTFILE")
+        self.keyfile = keyfile or os.getenv("KEYFILE")
         self.connected_clients = {}
 
     async def handle_audio(self, client, websocket):

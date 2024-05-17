@@ -3,8 +3,7 @@ import os
 import numpy as np
 from transformers import pipeline
 
-from src.asr.asr_interface import ASRInterface
-from src.audio_utils import convert_audio_to_wav
+from app.asr.asr_interface import ASRInterface
 
 
 class WhisperASR(ASRInterface):

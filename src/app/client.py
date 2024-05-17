@@ -1,6 +1,6 @@
 import logging
 
-from src.buffering_strategy.buffering_strategy_factory import BufferingStrategyFactory
+from app.buffering_strategy.buffering_strategy_factory import BufferingStrategyFactory
 
 logger = logging.getLogger(__name__)
 

@@ -32,7 +32,7 @@ ENV PYTHONUNBUFFERED True
 
 # install OS deps
 RUN apt-get update -y \
-    && apt-get install -y libsndfile1 ffmpeg
+    && apt-get install -y libasound-dev libsndfile1-dev ffmpeg
 
 # Install deps
 COPY --from=requirements-stage /tmp/requirements.txt requirements.txt
@@ -40,7 +40,7 @@ COPY --from=requirements-stage /tmp/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy local code to the container image
-COPY src src
+COPY src/app ./app
 
 # Switch to non-root user
 USER $USER
@@ -50,9 +50,8 @@ EXPOSE 8765
 
 # Define environment variable
 ENV NAME VoiceStreamAI
+ENV HOST "0.0.0.0"
+ENV PORT "8765"
 
 # Set the entrypoint to your application
-ENTRYPOINT ["python3", "-m", "src.main"]
-
-# Provide a default command (can be overridden at runtime)
-CMD ["--host", "0.0.0.0", "--port", "8765"]
+ENTRYPOINT ["python3", "-m", "app.main"]
