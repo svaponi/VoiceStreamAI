@@ -1,9 +1,13 @@
 import asyncio
 import json
+import logging
 import os
 import time
 
-from .buffering_strategy_interface import BufferingStrategyInterface
+from app.buffering_strategy.buffering_strategy_interface import BufferingStrategyInterface
+from app.tts.tts import Synthesizer
+
+logger = logging.getLogger(__name__)
 
 
 class SilenceAtEndOfChunk(BufferingStrategyInterface):
@@ -28,6 +32,7 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
             **kwargs: Additional keyword arguments, including 'chunk_length_seconds' and 'chunk_offset_seconds'.
         """
         self.client = client
+        self.tts_pipeline = Synthesizer(thread_id=client.client_id)
 
         self.chunk_length_seconds = os.environ.get("BUFFERING_CHUNK_LENGTH_SECONDS")
         if not self.chunk_length_seconds:
@@ -70,7 +75,7 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
 
             self.client.scratch_buffer += self.client.buffer
             self.client.buffer.clear()
-            self.processing_flag = True
+            self.processing_flag = False
             # Schedule the processing in a separate task
             asyncio.create_task(
                 self.process_audio_async(websocket, vad_pipeline, asr_pipeline)
@@ -95,6 +100,7 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
             self.client.scratch_buffer.clear()
             self.client.buffer.clear()
             self.processing_flag = False
+            logger.info("No voice activity detected.")
             return
 
         last_segment_should_end_before = (
@@ -104,11 +110,20 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
         if vad_results[-1]["end"] < last_segment_should_end_before:
             transcription = await asr_pipeline.transcribe(self.client)
             if transcription["text"] != "":
+                asyncio.create_task(self._send_reply(websocket, transcription))
                 end = time.time()
                 transcription["processing_time"] = end - start
                 json_transcription = json.dumps(transcription)
                 await websocket.send(json_transcription)
             self.client.scratch_buffer.clear()
-            self.client.increment_file_counter()
 
         self.processing_flag = False
+
+    async def _send_reply(self, websocket, transcription):
+        text = transcription.get("text")
+        if self.tts_pipeline and text:
+            audio_data, text = await self.tts_pipeline.synthesize(text)
+            if audio_data:
+                await websocket.send(audio_data)
+            if text:
+                await websocket.send(json.dumps({"text": text}))

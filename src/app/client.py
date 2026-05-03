@@ -53,11 +53,5 @@ class Client:
     def clear_buffer(self):
         self.buffer.clear()
 
-    def increment_file_counter(self):
-        self.file_counter += 1
-
-    def get_file_name(self):
-        return f"{self.client_id}_{self.file_counter}.wav"
-
     def process_audio(self, websocket, vad_pipeline, asr_pipeline):
         self.buffering_strategy.process_audio(websocket, vad_pipeline, asr_pipeline)
